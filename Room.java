@@ -63,6 +63,7 @@ public class Room
         return "You are " + description + ".\n" + getExitString();
     }
 
+    
     /**
      * Return a string describing the room's exits, for example
      * "Exits: north west".
