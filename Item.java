@@ -12,26 +12,39 @@ public class Item
 {
     private String description;
     private boolean has;
-    private int weapon; //1 for yes, 0 for no. used for calculating monster death
     /**
      * Constructor for objects of class Item
      * 
      * @param description The name of the item element
-     * @param weapon The binary value of whether it is weaponized
      */
-    public Item(String description, int weapon)
+    public Item(String description)
     {
         // initialise instance variables
         this.description = description;
-        this.weapon = weapon;
-        has = true;
+        has = false;
     }
 
     /**
-     * An example of a method - replace this comment with your own
-     *
-     * @param  y  a sample parameter for a method
-     * @return    the sum of x and y
+     * Set 'has' boolean to true on pickup
+     */
+    public void pickup(){
+        this.has = true;
+    }
+    /**
+     * Set 'has' boolean to false on use/drop
+     */
+    public void drop(){
+        this.has = false;
+    }
+    /**
+     * Check if item is in inventory or not
+     */
+    public boolean has(){
+        return has;
+    }
+    /**
+     * Returns the item description
+     * @return  description  Item name
      */
     public String getDescription()
     {

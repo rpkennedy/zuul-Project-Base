@@ -1,19 +1,10 @@
-import java.util.ArrayList; 
+import java.util.*;
 /**
- *  This class is the main class of the "World of Zuul" application. 
- *  "World of Zuul" is a very simple, text based adventure game.  Users 
- *  can walk around some scenery. That's all. It should really be extended 
- *  to make it more interesting!
+ *  You ever been chased through the woods by a creature unknown
+ *  to mankind? Me neither. Better learn quick
  * 
- *  To play this game, create an instance of this class and call the "play"
- *  method.
- * 
- *  This main class creates and initialises all the others: it creates all
- *  rooms, creates the parser and starts the game.  It also evaluates and
- *  executes the commands that the parser returns.
- * 
- * @author  Michael Kölling and David J. Barnes
- * @version 2016.02.29
+ * @author  Ryan Kennedy
+ * @version 11.04.2019
  */
 
 public class Game 
@@ -26,6 +17,15 @@ public class Game
     Room research, server, conference, bathroom;
     Room director, lab, waste, quarters;
     ArrayList<Item> inventory = new ArrayList<Item>();
+    ArrayList<Room> monster = new ArrayList<Room>();
+    int counter = 0;
+    boolean wounded = false;
+    Item heal1 = new Item("Medic Bag");
+    Item heal2 = new Item("First-Aid Kit");
+    Item weap1 = new Item("Nightstick");
+    Item weap2 = new Item("Hunting Knife");
+    Item keys = new Item("Keys");
+    
     /**
      * Create the game and initialise its internal map.
      */
@@ -56,7 +56,7 @@ public class Game
         lobby = new Room("in the main lobby, there's some blood, but there's no going back");
         medical = new Room("at the Medical Wing junction");
         
-        research = new Room("in the main research facility. What were they trying to do?");
+        research = new Room("in the main research facility. The door locked behind you,\nyet the creature can get in the vents");
         server = new Room("in a room lined with servers, whoever was here meant business");
         conference = new Room("in the conference room. Amongst the sprawled chairs are corpses in lab-coats");
         bathroom = new Room("in the bathroom. In the mirror, you see how broken and tired you are");
@@ -119,36 +119,42 @@ public class Game
         
         quarters.setExit("west", bathroom);
 
+        monster.add(waste);
+        monster.add(waste);
+        monster.add(waste);    //monster is at end for first three turns
         currentRoom = entrance;  // start game outside
     }
     
+    /**
+     * Called every game update. Checks if current room is one with designated
+     * spawn. If so, adds item to inventory
+     */
     public void checkForItems(){
-        Item heal1, heal2, keys;
-        Item weap1, weap2;
+        
         
         if (currentRoom == infirmary){
-            heal1 = new Item("Medic Bag", 0);
             inventory.add(heal1);
+            heal1.pickup();
         }
         
         if (currentRoom == quarters){
-            heal2 = new Item("First-Aid Kit", 0);
             inventory.add(heal2);
+            heal2.pickup();
         }
             
         if (currentRoom == closet){
-            weap1 = new Item("Nightstick", 1);
             inventory.add(weap1);
+            weap1.pickup();
         }
             
         if (currentRoom == lab){
-            weap2 = new Item("Hunting Knife", 1);
             inventory.add(weap2);
+            weap2.pickup();
         }
             
         if (currentRoom == director){
-            keys = new Item("Keys", 0);
             inventory.add(keys);
+            keys.pickup();
         }
     }
     /**
@@ -221,6 +227,9 @@ public class Game
         return wantToQuit;
     }
 
+    /**
+     * Print what items you have if any to terminal
+     */
     public void printItems(){
         if (inventory.size() == 0)
             System.out.println("You haven't found anything worth keeping yet");
@@ -231,8 +240,7 @@ public class Game
     // implementations of user commands:
 
     /**
-     * Print out some help information.
-     * Here we print some stupid, cryptic message and a list of the 
+     * Here I printed some stupid, cryptic message and a list of the 
      * command words.
      */
     private void printHelp() 
@@ -266,12 +274,54 @@ public class Game
             System.out.println("There is no door!");
         }
         else {
+            monster.add(currentRoom);
             currentRoom = nextRoom;
             checkForItems();
-            System.out.println(currentRoom.getLongDescription());
+            checkLeave();
+            counter++;
+            if (currentRoom == monster.get(counter) || currentRoom == monster.get(counter-1))
+                encounter();
+            else
+                System.out.println(currentRoom.getLongDescription());
         }
     }
 
+    /**
+     * Check every game update whether the player is in waste disposal with
+     * the key or not. If so, game-win scenario plays
+     */
+    public void checkLeave(){
+       if (keys.has() == true && currentRoom == waste)
+       System.out.println("With the keys to the locked chute, you open\nit up and climb through. You've survived the ordeal\nPlease QUIT");
+    }
+    
+    /**
+     * The method for determining what happens when the player and creature meet
+     */
+    public void encounter(){
+        if (weap1.has() == false && weap2.has() == false)
+            if(heal1.has() == false && heal2.has() == false)
+            System.out.println("With nothing to defend or heal yourself with, \nthe creature overcomes you\nPlease QUIT");
+            else if (heal1.has() == true){
+            System.out.println("The creature corners you and you escape with injuries\nusing medical supplies to heal");
+            heal1.drop();}
+            else if (heal2.has() == true){
+            System.out.println("The creature corners you and you escape with injuries\nusing medical supplies to heal");
+            heal2.drop();}    
+        else if (wounded == true)
+            System.out.println("Coming across the wounded creature, you finish it with your weapon\nFinally able to move on from this tragedy, you escape\nPlease QUIT");
+            
+        else if (weap1.has() == true){
+            System.out.println("Using what you had picked up, you stun the creature \nwith an attack and slip by");
+            weap1.drop();
+            wounded = true;
+            }
+        else if (weap2.has() == true){
+            System.out.println("Using what you had picked up, you stun the creature \nwith an attack and slip by");
+            weap2.drop();
+            wounded = true;
+            }
+    }
     /** 
      * "Quit" was entered. Check the rest of the command to see
      * whether we really quit the game.
